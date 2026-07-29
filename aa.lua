@@ -1,145 +1,213 @@
 -- ============================================================
--- 🎣 UPVR Fishing Hub V10 - Mobile Bypass Edition
--- 📱 يدعم الجوال + نظام فك الحماية + Net Hook
--- ============================================================
-
--- ============================================================
--- 1. نظام فك الحماية (Bypass System) - للجوال
+-- كود الـ Bypass (تم دمجه كما هو بدون أي تعديل)
 -- ============================================================
 for _, obj in pairs(workspace:GetDescendants()) do
     if obj:IsA("Model") and obj.Name == "DoorSystem" then
-        pcall(function() obj:Destroy() end)
+        obj:Destroy()
     end
 end
-
 if not game:IsLoaded() then
-    repeat task.wait() until game:IsLoaded()
+    repeat
+        task.wait()
+    until game:IsLoaded()
 end
-
--- Hook Transition UI
-pcall(function()
-    local RS_temp = game:GetService("ReplicatedStorage")
-    if RS_temp:FindFirstChild("Modules") and RS_temp.Modules:FindFirstChild("Game") then
-        local TransitionModule = require(RS_temp.Modules.Game.UI.TransitionUI)
+if not (game.PlaceId == 104715542330896 or game.PlaceId == 97556409405464) then
+    return
+end
+pcall(
+    function()
+        local TransitionModule = require(RS.Modules.Game.UI.TransitionUI)
+        -- Hook transition() - บังคับรอ 10 วิ
         local old_transition = TransitionModule.transition
         TransitionModule.transition = function(p_in, p_wait, p_out, noLogo)
-            return true
+            return result
         end
     end
-end)
-
--- Hook Character Creator
-pcall(function()
-    local RS_temp = game:GetService("ReplicatedStorage")
-    if RS_temp:FindFirstChild("Modules") and RS_temp.Modules:FindFirstChild("Game") then
-        local CharCreator = require(RS_temp.Modules.Game.CharacterCreator.CharacterCreator)
+)
+pcall(
+    function()
+        local CharCreator = require(RS.Modules.Game.CharacterCreator.CharacterCreator)
+       
         if CharCreator.start then
+            local old_start = CharCreator.start
             CharCreator.start = function(...)
-                while true do task.wait(1) end
+               
+                while true do
+                    task.wait(1)
+                end
+            end
+        end
+       
+        if CharCreator.load_page then
+            local old_load = CharCreator.load_page
+            CharCreator.load_page = function(...)
+                return old_load(...)
+            end
+        end
+        -- Hook initiate() - เริ่มต้น character creator
+        if CharCreator.initiate then
+            local old_initiate = CharCreator.initiate
+            CharCreator.initiate = function(...)
+                return old_initiate(...)
             end
         end
     end
+)
+local VehiclesFolder = workspace:WaitForChild("Vehicles")
+local protectedVehicles = {}
+local function updateVehicleList()
+    protectedVehicles = {}
+    for _, model in ipairs(VehiclesFolder:GetDescendants()) do
+        if model:IsA("VehicleSeat") and model.Name == "DriverSeat" then
+            local vehicle = model:FindFirstAncestorOfClass("Model")
+            if vehicle then
+                protectedVehicles[vehicle] = true
+            end
+        end
+    end
+end
+updateVehicleList()
+local function isProtectedSeat(seat)
+    local vehicle = seat:FindFirstAncestorOfClass("Model")
+    return vehicle and protectedVehicles[vehicle] == true
+end
+local function removeSeatIfNotInProtectedVehicle(seat)
+    if isProtectedSeat(seat) then
+        return
+    end
+    seat:Destroy()
+end
+for _, seat in ipairs(workspace:GetDescendants()) do
+    if seat:IsA("Seat") or seat:IsA("VehicleSeat") then
+        if not isProtectedSeat(seat) then
+            removeSeatIfNotInProtectedVehicle(seat)
+        end
+    end
+end
+VehiclesFolder.DescendantAdded:Connect(function(obj)
+    if obj:IsA("VehicleSeat") and obj.Name == "DriverSeat" then
+        updateVehicleList()
+    end
 end)
-
--- Bypass identifyexecutor
-if getgenv then getgenv().identifyexecutor = nil end
+workspace.DescendantAdded:Connect(function(obj)
+    if obj:IsA("Seat") or obj:IsA("VehicleSeat") then
+        if not isProtectedSeat(obj) then
+            removeSeatIfNotInProtectedVehicle(obj)
+        end
+    end
+end)
+game:GetService("ReplicatedStorage")
+if getgenv then
+    getgenv().identifyexecutor = nil
+end
 if getfenv then
     local env = getfenv()
     env.identifyexecutor = nil
 end
-
-print("✅ [Bypass] تم تفعيل نظام فك الحماية")
-
--- ============================================================
--- 2. نظام Net Hook (للتجاوز على الجوال)
--- ============================================================
-local RS = game:GetService("ReplicatedStorage")
 local v_u_1 = {}
-local v2 = RS:WaitForChild("Remotes")
+local v2 = game.ReplicatedStorage:WaitForChild("Remotes")
 local v_u_3 = {
-    ["send"] = v2:WaitForChild("Send"),
-    ["get"] = v2:WaitForChild("Get")
+["send"] = v2:WaitForChild("Send"),
+["get"] = v2:WaitForChild("Get")
 }
-local v_u_4 = {["event"] = 0, ["func"] = 0}
+local v_u_4 = {
+["event"] = 0,
+["func"] = 0
+}
 local v_u_5 = {}
 local v_u_6 = false
 local v_u_7 = {}
-
 function v_u_1.on_connect(p8)
-    if v_u_6 then p8()
-    else v_u_7[#v_u_7 + 1] = p8 end
+if v_u_6 then
+p8()
+else
+v_u_7[#v_u_7 + 1] = p8
 end
-
+end
 function v_u_1.hook(p_u_9, p_u_10)
-    if not p_u_10 then error("Function nil for hook " .. p_u_9) end
-    if v_u_6 then
-        if v_u_5[p_u_9] then warn("Overwriting hook '" .. p_u_9 .. "'.")
-        else v_u_5[p_u_9] = p_u_10 end
-    else
-        v_u_1.on_connect(function() v_u_1.hook(p_u_9, p_u_10) end)
-        return
-    end
+if not p_u_10 then
+error("Function nil for hook " .. p_u_9)
 end
-
+if v_u_6 then
+if v_u_5[p_u_9] then
+warn("Overwriting hook \'" .. p_u_9 .. "\'.")
+else
+v_u_5[p_u_9] = p_u_10
+end
+else
+v_u_1.on_connect(function()
+v_u_1.hook(p_u_9, p_u_10)
+end)
+return
+end
+end
 function v_u_1.is_connected(p11)
-    return p11:GetAttribute("IsConnected") and true or false
+return p11:GetAttribute("IsConnected") and true or false
 end
-
+local function v_u_19(p12, p13, p14, p15, ...)
+return p12(p13, p14, p15, ...)
+end
 task.wait(0.1)
 local v_u_20 = v_u_3.send
 local v_u_21 = v_u_3.send.FireServer
-
 function v_u_1.send(p22, ...)
-    v_u_4.event = v_u_4.event + 1
-    v_u_21(v_u_20, v_u_4.event, p22, ...)
+v_u_4.event = v_u_4.event + 1
+v_u_21(v_u_20, v_u_4.event, p22, ...)
 end
-
 local v_u_23 = v_u_3.get
 local v_u_24 = v_u_3.get.InvokeServer
-
 function v_u_1.get(p25, ...)
-    v_u_4.func = v_u_4.func + 1
-    return v_u_24(v_u_23, v_u_4.func, p25, ...)
+v_u_4.func = v_u_4.func + 1
+return v_u_24(v_u_23, v_u_4.func, p25, ...)
 end
-
 task.wait(0.1)
-
 local function v_u_29()
-    v_u_3.send.OnClientEvent:connect(function(p26, ...)
-        if v_u_5[p26] then v_u_5[p26](...)
-        else error("Invalid hook '" .. p26 .. "' fired!", 0) end
-    end)
-    function v_u_3.get.OnClientInvoke(p27, ...)
-        if v_u_5[p27] then return v_u_5[p27](...) end
-        error("Invalid hook '" .. p27 .. "' invoked!", 0)
-    end
-    pcall(function()
-        for v28 = 1, #v_u_7 do v_u_7[v28]() end
-    end)
+v_u_3.send.OnClientEvent:connect(function(p26, ...)
+if v_u_5[p26] then
+v_u_5[p26](...)
+else
+error("Invalid hook \'" .. p26 .. "\' fired!", 0)
 end
-
+end)
+function v_u_3.get.OnClientInvoke(p27, ...)
+if v_u_5[p27] then
+return v_u_5[p27](...)
+end
+error("Invalid hook \'" .. p27 .. "\' invoked!", 0)
+end
+if not pcall(function()
+for v28 = 1, #v_u_7 do
+v_u_7[v28]()
+end
+end) then
+pcall(function()
+print("On connect failed for client")
+v_u_1.send("issue", "On connect failed for client")
+end)
+end
+end
 function v_u_1.initiate() end
-
 function v_u_1.loaded()
-    function v_u_3.get.OnClientInvoke(p30)
-        if p30 == "connect" then
-            v_u_6 = true
-            v_u_29()
-            return true
-        end
-    end
-    v_u_1.hook("ping", function() return true end)
+function v_u_3.get.OnClientInvoke(p30)
+if p30 == "connect" then
+v_u_6 = true
+v_u_29()
+return true
 end
-
-print("✅ [Net Hook] تم تفعيل نظام Net Hook للجوال")
+end
+v_u_1.hook("ping", function()
+return true
+end)
+end
+print("bypassed")
 
 -- ============================================================
--- 3. تحميل المكتبة وإنشاء النافذة (Fluent UI)
+-- 1. تحميل المكتبة وإنشاء النافذة
 -- ============================================================
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local Window = Fluent:CreateWindow({
     Title = "قائمة الصيد الاحترافية V10",
-    SubTitle = "📱 Mobile + Bypass Edition",
+    SubTitle = "بواسطة المطور",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -148,7 +216,7 @@ local Window = Fluent:CreateWindow({
 })
 
 -- ============================================================
--- 4. إعدادات القائمة والتحكم
+-- 2. إعدادات القائمة والتحكم
 -- ============================================================
 local FishTab = Window:AddTab({ Title = "FishFarm", Icon = "fish" })
 local DevTab = Window:AddTab({ Title = "Dev", Icon = "code" })
@@ -160,15 +228,15 @@ local Config = { StopWalking = false, Running = false, Respawn = false }
 local AntiKickEnabled = false
 local IsUnderground = false
 
--- إعدادات تغيير السيرفر
+-- ⚠️ إعدادات تغيير السيرفر
 local ServerSwitchEnabled = false
 local ServerSwitchInterval = 30
 local LastServerSwitchTime = tick()
 
--- إعدادات الحماية من الخمول
+-- ⚠️ إعدادات الحماية من الخمول والتعليق (Anti-Stuck)
 local LastActivityTime = tick()
 local LastCheckedPosition = Vector3.new(0, 0, 0)
-local IdleThreshold = 600
+local IdleThreshold = 600 -- 10 دقائق (600 ثانية)
 
 local function UpdateActivity()
     LastActivityTime = tick()
@@ -179,7 +247,7 @@ local function UpdateActivity()
 end
 
 -- ============================================================
--- 5. عناصر القائمة
+-- 2.0 عناصر القائمة
 -- ============================================================
 FishTab:AddSection("إعدادات المعدات")
 local AutoBuyToggle = FishTab:AddToggle("AutoBuyEnabled", {
@@ -267,7 +335,7 @@ FishTab:AddToggle("RespawnToggle", {
 })
 
 -- ============================================================
--- 6. زر تفعيل مانع الطرد
+-- 2.1 زر تفعيل مانع الطرد
 -- ============================================================
 AntiKickTab:AddSection("مانع الطرد")
 AntiKickTab:AddToggle("AntiKickToggle", {
@@ -286,7 +354,7 @@ AntiKickTab:AddToggle("AntiKickToggle", {
 })
 
 -- ============================================================
--- 7. إعدادات تغيير السيرفر
+-- 2.2 إعدادات تغيير السيرفر
 -- ============================================================
 ServerTab:AddSection("تغيير السيرفر التلقائي")
 ServerTab:AddToggle("ServerSwitchToggle", {
@@ -303,6 +371,7 @@ ServerTab:AddToggle("ServerSwitchToggle", {
         end
     end
 })
+
 ServerTab:AddSlider("ServerSwitchIntervalSlider", {
     Title = "الفترة بين التغيير (دقائق)",
     Min = 5,
@@ -314,12 +383,14 @@ ServerTab:AddSlider("ServerSwitchIntervalSlider", {
         print("⏱️ تم تعيين الفترة إلى " .. Value .. " دقيقة")
     end
 })
+
 ServerTab:AddButton({
     Title = "🎯 Hop Server (Low Player) - الآن",
     Callback = function()
         task.spawn(SwitchToSmallestServer)
     end
 })
+
 ServerTab:AddButton({
     Title = "🔄 Rejoin نفس السيرفر",
     Callback = function()
@@ -329,20 +400,28 @@ ServerTab:AddButton({
 })
 
 -- ============================================================
--- 8. حفظ وحذف Config
+-- 2.3 حفظ وحذف Config
 -- ============================================================
 ServerTab:AddSection("💾 إدارة الإعدادات")
 ServerTab:AddButton({
     Title = "💾 حفظ الإعدادات",
-    Callback = function() SaveConfig() end
+    Callback = function()
+        SaveConfig()
+    end
 })
+
 ServerTab:AddButton({
     Title = "📂 تحميل الإعدادات",
-    Callback = function() LoadConfig() end
+    Callback = function()
+        LoadConfig()
+    end
 })
+
 ServerTab:AddButton({
     Title = "🗑️ حذف الإعدادات",
-    Callback = function() DeleteConfig() end
+    Callback = function()
+        DeleteConfig()
+    end
 })
 
 DevTab:AddButton({
@@ -353,7 +432,7 @@ DevTab:AddButton({
 })
 
 -- ============================================================
--- 9. حلقة مانع الطرد (كل 15 دقيقة)
+-- 3. حلقة مانع الطرد (كل 15 دقيقة)
 -- ============================================================
 local function AntiKickLoop()
     while AntiKickEnabled do
@@ -380,8 +459,9 @@ local function AntiKickLoop()
 end
 
 -- ============================================================
--- 10. الخدمات والموديولات الرسمية
+-- 4. الخدمات والموديولات الرسمية
 -- ============================================================
+local RS = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local PathfindingService = game:GetService("PathfindingService")
@@ -402,7 +482,7 @@ Client.CharacterAdded:Connect(function(c)
     RootPart = c:WaitForChild("HumanoidRootPart")
     Backpack = Client:WaitForChild("Backpack")
     IsUnderground = false
-    UpdateActivity()
+    UpdateActivity() -- تحديث النشاط عند إعادة الظهور
     print("🔄 تم اكتشاف إعادة ظهور الشخصية (Respawn)!")
 end)
 
@@ -444,7 +524,7 @@ local FishingBaits = {
 }
 
 -- ============================================================
--- 11. نظام حفظ وتحميل Config
+-- 5. نظام حفظ وتحميل Config
 -- ============================================================
 local ConfigPath = "UPVR_Fishing_Config.json"
 
@@ -462,9 +542,11 @@ function SaveConfig()
         ServerSwitchInterval = ServerSwitchInterval,
         AutoFarmActive = IsFarmingActive
     }
+    
     local success, err = pcall(function()
         writefile(ConfigPath, HttpService:JSONEncode(configData))
     end)
+    
     if success then
         print("💾 تم حفظ الإعدادات بنجاح!")
     else
@@ -478,7 +560,9 @@ function LoadConfig()
             warn("⚠️ لا يوجد ملف إعدادات محفوظ!")
             return false
         end
+        
         local data = HttpService:JSONDecode(readfile(ConfigPath))
+        
         if data.AutoBuyEnabled ~= nil then AutoBuyToggle:Set(data.AutoBuyEnabled) end
         if data.RodSelect then RodDropdown:Set(data.RodSelect) end
         if data.BaitSelect then BaitDropdown:Set(data.BaitSelect) end
@@ -489,18 +573,23 @@ function LoadConfig()
         if data.AntiKick ~= nil then AntiKickEnabled = data.AntiKick end
         if data.ServerSwitch ~= nil then ServerSwitchEnabled = data.ServerSwitch end
         if data.ServerSwitchInterval then ServerSwitchInterval = data.ServerSwitchInterval end
+        
         print("📂 تم تحميل الإعدادات بنجاح!")
+        
         if data.AutoFarmActive then
             IsFarmingActive = true
             UpdateActivity()
             task.spawn(StartAutoFarm)
             print("🚀 تم تشغيل Auto Farm تلقائياً!")
         end
+        
         if AntiKickEnabled then
             task.spawn(AntiKickLoop)
         end
+        
         return true
     end)
+    
     if not success then
         warn("❌ فشل تحميل الإعدادات: " .. tostring(err))
     end
@@ -516,16 +605,18 @@ function DeleteConfig()
             warn("⚠️ لا يوجد ملف إعدادات لحذفه!")
         end
     end)
+    
     if not success then
         warn("❌ فشل حذف الإعدادات: " .. tostring(err))
     end
 end
 
 -- ============================================================
--- 12. نظام تغيير السيرفر
+-- 6. نظام تغيير السيرفر
 -- ============================================================
 function SwitchToSmallestServer()
     print("🔄 جاري البحث عن سيرفر بأقل عدد لاعبين...")
+    
     local servers = {}
     local req = game:HttpGet(
         string.format(
@@ -533,9 +624,11 @@ function SwitchToSmallestServer()
             game.PlaceId
         )
     )
+    
     local success, data = pcall(function()
         return HttpService:JSONDecode(req)
     end)
+    
     if success and data and data.data then
         local currentJobId = game.JobId
         for _, v in pairs(data.data) do
@@ -544,6 +637,7 @@ function SwitchToSmallestServer()
             end
         end
     end
+    
     if #servers > 0 then
         local targetJobId = servers[math.random(1, #servers)]
         print("🎯 تم اختيار سيرفر جديد! جاري الانتقال...")
@@ -570,7 +664,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 13. نظام الانتظار للواجهة البدائية وبدء الفارم
+-- 7. نظام الانتظار للواجهة البدائية وبدء الفارم
 -- ============================================================
 function WaitForLoadingScreenAndStart()
     print("⏳ انتظار الواجهة البدائية...")
@@ -578,14 +672,16 @@ function WaitForLoadingScreenAndStart()
     if loadingScreen then
         print("✅ تم اكتشاف الواجهة البدائية!")
         task.wait(3)
-        pcall(function() v_u_1.get("loading_screen_camera_part", false) end)
+        pcall(function() Net_upvr.get("loading_screen_camera_part", false) end)
         task.wait(1)
-        pcall(function() v_u_1.send("leave_character_creator") end)
+        pcall(function() Net_upvr.send("leave_character_creator") end)
         task.wait(2)
+        
         Character = Client.Character or Client.CharacterAdded:Wait()
         Humanoid = Character:WaitForChild("Humanoid")
         RootPart = Character:WaitForChild("HumanoidRootPart")
         task.wait(2)
+        
         local loaded = LoadConfig()
         if loaded and IsFarmingActive then
             UpdateActivity()
@@ -607,7 +703,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 14. إعدادات الـ Webhook
+-- 8. إعدادات الـ Webhook
 -- ============================================================
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1529908007964774560/kqGFSEdJSuoYXaxCukQV3HP8-e41okzc0Fp4DPfFLsH4P57uq3JkzUy6717A5epk8ual"
 
@@ -640,7 +736,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 15. نظام مراقبة الإنونتوري للأسماك
+-- 9. نظام مراقبة الإنونتوري للأسماك
 -- ============================================================
 local LastFishCount = {}
 
@@ -649,6 +745,7 @@ local function GetFishNamesFromInventory()
     local Items = PlayerGui:FindFirstChild("Items")
     local Holding = Items and Items:FindFirstChild("ItemsHolder") and Items.ItemsHolder:FindFirstChild("ItemsScrollingFrame")
     if not Holding then return fishList end
+    
     for _, v in pairs(Holding:GetChildren()) do
         if v.Name ~= 'Folder' and v.Name ~= 'UIGridLayout' and v.Name ~= "ItemTemplate" then
             local itemType = v:GetAttribute("ItemType")
@@ -694,11 +791,10 @@ local function MonitorInventoryForFish()
         end
     end)
 end
-
 MonitorInventoryForFish()
 
 -- ============================================================
--- 16. نظام مراقبة الرسائل المتطور (الحماية الذكية)
+-- 10. نظام مراقبة الرسائل المتطور (الحماية الذكية)
 -- ============================================================
 local isProtectionTriggered = false
 local lastKnownPosition = nil
@@ -761,11 +857,10 @@ local function SetupNotificationMonitor()
         end
     end)
 end
-
 SetupNotificationMonitor()
 
 -- ============================================================
--- 17. نظام حظر Remote الطرد
+-- 11. نظام حظر Remote الطرد
 -- ============================================================
 local SendRemote = RS:WaitForChild("Remotes"):WaitForChild("Send")
 local oldFireServer
@@ -776,7 +871,7 @@ oldFireServer = hookfunction(SendRemote.FireServer, function(self, ...)
 end)
 
 -- ============================================================
--- 18. نظام المشي الذكي
+-- 12. نظام المشي الذكي
 -- ============================================================
 local Sf = {}
 
@@ -791,12 +886,14 @@ function Sf:MoveSmoothly(startPos, endPos, speed)
     local char = Client.Character or Client.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
     local hum = char:WaitForChild("Humanoid")
+    
     local dist = (endPos - startPos).Magnitude
     if dist < 0.5 then Config.Running = false; return end
     local dir = (endPos - startPos).Unit
     local movedDist = 0
     local startTime = tick()
     local spd = speed or WalkSpeedSlider.Value or 20
+
     while movedDist < dist and IsFarmingActive and not Config.StopWalking and not isProtectionTriggered do
         task.wait()
         if not IsFarmingActive or Config.StopWalking or isProtectionTriggered or hum.Health <= 0 then break end
@@ -805,7 +902,7 @@ function Sf:MoveSmoothly(startPos, endPos, speed)
         local newPos = startPos + dir * movedDist
         if hum.Sit then hum.Sit = false end
         hrp:PivotTo(CFrame.new(newPos))
-        pcall(function() v_u_1.send("set_sprinting_1", true) end)
+        pcall(function() Net_upvr.send("set_sprinting_1", true) end)
     end
     Config.Running = false
 end
@@ -837,13 +934,17 @@ function Sf:Teleport(destination, value, speed)
     local char = Client.Character or Client.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
     local hum = char:WaitForChild("Humanoid")
+
     local path = PathfindingService:CreatePath({
         AgentCanJump = true, AgentJumpHeight = 2.5, AgentHeight = 8, AgentRadius = 2.5, AgentMaxSlope = 90, Costs = {BlockedNode = 50, DoorArea = 1}
     })
+
     local success = pcall(function() path:ComputeAsync(hrp.Position, destination) end)
     if not success or path.Status ~= Enum.PathStatus.Success then Config.Running = false; return end
+
     local waypoints = path:GetWaypoints()
     speed = speed or WalkSpeedSlider.Value or 20
+
     for _, wp in pairs(waypoints) do
         if isProtectionTriggered or not IsFarmingActive or Config.StopWalking then Config.Running = false; return end
         local offsetY = (wp.Action == Enum.PathWaypointAction.Jump) and 10 or 4
@@ -853,6 +954,7 @@ function Sf:Teleport(destination, value, speed)
         local dist = (targetPos - startPos).Magnitude
         local movedDist = 0
         local startTime = tick()
+
         while movedDist < dist and IsFarmingActive and not Config.StopWalking and not isProtectionTriggered do
             task.wait()
             if not value or hum.Health <= 0 then break end
@@ -861,7 +963,7 @@ function Sf:Teleport(destination, value, speed)
             local newPos = startPos + dir * movedDist
             if hum.Sit then hum.Sit = false end
             hrp:PivotTo(CFrame.new(newPos))
-            pcall(function() v_u_1.send("set_sprinting_1", true) end)
+            pcall(function() Net_upvr.send("set_sprinting_1", true) end)
         end
         if not value or hum.Health <= 0 then break end
     end
@@ -888,7 +990,7 @@ do
 end
 
 -- ============================================================
--- 19. وظائف الإنونتوري والصراف والشراء والبيع
+-- 13. وظائف الإنونتوري والصراف والشراء والبيع
 -- ============================================================
 function Sf:GetMoney()
     local moneyData = Data_upvr.money
@@ -969,7 +1071,7 @@ end
 
 function Sf:SellAllFish()
     task.wait(0.5)
-    pcall(function() v_u_1.get("sell_all_fish") end)
+    pcall(function() Net_upvr.get("sell_all_fish") end)
     task.wait(0.5)
 end
 
@@ -1011,7 +1113,7 @@ function DepositAllMoney()
     if not atm then return false end
     Sf:Teleport(atm.Area.Position, true, 20)
     task.wait(0.5)
-    pcall(function() v_u_1.get("transfer_funds", "hand", "bank", handMoney) end)
+    pcall(function() Net_upvr.get("transfer_funds", "hand", "bank", handMoney) end)
     task.wait(0.5)
     return true
 end
@@ -1026,7 +1128,7 @@ function WithdrawSpecificAmount(amount)
     if not atm then return false end
     Sf:Teleport(atm.Area.Position, true, 20)
     task.wait(0.5)
-    pcall(function() v_u_1.get("transfer_funds", "bank", "hand", needed) end)
+    pcall(function() Net_upvr.get("transfer_funds", "bank", "hand", needed) end)
     task.wait(0.5)
     return true
 end
@@ -1037,6 +1139,7 @@ function BuyEquipment()
     local Items = PlayerGui:FindFirstChild("Items")
     local Holding = Items and Items:FindFirstChild("ItemsHolder") and Items.ItemsHolder:FindFirstChild("ItemsScrollingFrame")
     
+    -- مسح سريع بدون انتظار
     if Holding then
         for _, v in pairs(Holding:GetChildren()) do
             if v.Name ~= 'Folder' and v.Name ~= 'UIGridLayout' and v.Name ~= "ItemTemplate" then
@@ -1044,7 +1147,7 @@ function BuyEquipment()
                 if nameLbl and nameLbl.Text then
                     local itemUid = v.Name
                     if not ((hasRod and itemUid == currentRodUid) or (hasBait and itemUid == currentBaitUid)) then
-                        pcall(function() v_u_1.get("drop_item", itemUid, 1) end)
+                        pcall(function() Net_upvr.get("drop_item", itemUid, 1) end)
                     end
                 end
             end
@@ -1087,16 +1190,17 @@ function BuyEquipment()
     if not shopFolder then return false end
     
     if not hasRodAfterDrop then
-        pcall(function() v_u_1.get("purchase_consumable", shopFolder, targetRod) end)
+        pcall(function() Net_upvr.get("purchase_consumable", shopFolder, targetRod) end)
         task.wait(0.2)
     end
     
+    -- ⚡ شراء الطعم بسرعة فائقة (Rapid Fire)
     if not hasBaitAfterDrop then
         for i = 1, targetBait do
             if not IsFarmingActive then break end
-            pcall(function() v_u_1.get("purchase_consumable", shopFolder, targetBaitName) end)
+            pcall(function() Net_upvr.get("purchase_consumable", shopFolder, targetBaitName) end)
         end
-        task.wait(0.5)
+        task.wait(0.5) -- انتظار واحد فقط في النهاية للسماح للسيرفر بمعالجة الطلبات
     end
     
     UpdateActivity()
@@ -1123,7 +1227,7 @@ function EquipRod()
     local hasRod, rodName, rodUid, _ = Sf:HasAnyRod()
     if not hasRod or not rodName then return false end
     if Sf:IsRodEquipped(rodName) then return true end
-    pcall(function() v_u_1.get("toggle_equip_item", tostring(rodUid)) end)
+    pcall(function() Net_upvr.get("toggle_equip_item", tostring(rodUid)) end)
     task.wait(0.3)
     local char = Client.Character
     local backpack = Client:FindFirstChild("Backpack")
@@ -1151,7 +1255,7 @@ function EquipBaitOnRod()
     local hasRod, _, rodUid = Sf:HasAnyRod()
     local hasBait, _, baitUid = Sf:HasAnyBait()
     if hasRod and rodUid and hasBait and baitUid then
-        pcall(function() v_u_1.get("equip_ammo_on_item", rodUid, baitUid) end)
+        pcall(function() Net_upvr.get("equip_ammo_on_item", rodUid, baitUid) end)
         task.wait(0.2)
         return true
     end
@@ -1193,7 +1297,7 @@ local function QuickWin()
 end
 
 -- ============================================================
--- 20. نظام إعادة الإحياء التلقائي (عند الموت فقط)
+-- 14. نظام إعادة الإحياء التلقائي (عند الموت فقط)
 -- ============================================================
 task.spawn(function()
     while task.wait(0.5) do
@@ -1204,7 +1308,7 @@ task.spawn(function()
             if holder and holder.Visible then
                 local btn = holder:FindFirstChild("Frame") and holder.Frame:FindFirstChild("RespawnButtonFrame") and holder.Frame.RespawnButtonFrame:FindFirstChild("RespawnButton") and holder.Frame.RespawnButtonFrame.RespawnButton:FindFirstChild("TextLabel")
                 if btn and btn.Text == "Respawn" then
-                    pcall(function() v_u_1.send("death_screen_request_respawn") end)
+                    pcall(function() Net_upvr.send("death_screen_request_respawn") end)
                     print("✅ تم إعادة الإحياء تلقائياً (بسبب الموت)!")
                 end
             end
@@ -1213,30 +1317,35 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 21. نظام الحماية من الخمول والتعليق (Anti-Stuck / Anti-AFK)
+-- 15. ⚠️ نظام الحماية من الخمول والتعليق (Anti-Stuck / Anti-AFK) ⚠️
 -- ============================================================
 task.spawn(function()
     while true do
-        task.wait(5)
+        task.wait(5) -- فحص كل 5 ثوانٍ
+        
         if not IsFarmingActive then
             UpdateActivity()
             continue
         end
+
         local currentTime = tick()
         local timeSinceActivity = currentTime - LastActivityTime
+        
+        -- التحقق من الحركة (إذا تحرك أكثر من 3 خطوات، نعتبره نشطاً)
         local char = game.Players.LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             local currentPos = char.HumanoidRootPart.Position
             local distanceMoved = (currentPos - LastCheckedPosition).Magnitude
+            
             if distanceMoved > 3 then
-                UpdateActivity()
+                UpdateActivity() -- تحرك، إذن ليس عالقاً
             elseif timeSinceActivity >= IdleThreshold then
                 print("⚠️ [Anti-Stuck] تم اكتشاف خمول/تعليق لمدة 10 دقائق! جاري إعادة الإحياء لكسر التعليق...")
                 pcall(function()
-                    v_u_1.send("request_respawn")
+                    Net_upvr.send("request_respawn")
                 end)
-                task.wait(2)
-                UpdateActivity()
+                task.wait(2) -- انتظار بسيط لضمان تنفيذ الأمر
+                UpdateActivity() -- تصفير العداد بعد إعادة الإحياء
                 print("✅ [Anti-Stuck] تم إرسال أمر إعادة الإحياء بنجاح!")
             end
         end
@@ -1244,7 +1353,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 22. الدورة الرئيسية للصيد
+-- 16. الدورة الرئيسية للصيد
 -- ============================================================
 function StartAutoFarm()
     IsFarmingActive = true
@@ -1271,15 +1380,15 @@ function StartAutoFarm()
             task.wait(2)
         end
     end)
-    
+
     if AutoBuyToggle.Value then
         BuyEquipment()
         if not IsFarmingActive then return end
     end
-    
+
     EquipRod()
     if not IsFarmingActive then return end
-    
+
     while IsFarmingActive do
         if not Client.Character or not Client.Character.Parent then
             task.wait(1)
@@ -1289,34 +1398,39 @@ function StartAutoFarm()
         Character = Client.Character
         Humanoid = Character:FindFirstChildOfClass("Humanoid")
         RootPart = Character:FindFirstChild("HumanoidRootPart")
-        
+
         if isProtectionTriggered then
             while isProtectionTriggered and IsFarmingActive do task.wait(0.5) end
             if not IsFarmingActive then break end
             continue
         end
-        
+
         EnsureRodEquipped()
-        
+
         local zone = ZoneDropdown.Value
         local data = Zones[zone]
         if not data then task.wait(1); continue end
-        
+
         local inventoryCount = Sf:GetInventoryCount()
         local hasBait = Sf:HasAnyBait()
         
         if inventoryCount >= 17 or not hasBait then
             RootPart.Anchored = false
+            
             if zone == "Level 70 +" and IsUnderground then
                 Sf:GoToSurface()
             end
+            
             local fishCount = Sf:GetFishCount()
             if fishCount > 0 then
                 Sf:SellFishWithPath()
                 task.wait(0.5)
             end
+            
             DepositAllMoney()
+            
             if not IsFarmingActive then break end
+            
             hasBait = Sf:HasAnyBait()
             if not hasBait then
                 BuyEquipment()
@@ -1324,7 +1438,7 @@ function StartAutoFarm()
                 EquipRod()
             end
         end
-        
+
         if IsFarmingActive and inventoryCount < 17 and Sf:HasAnyBait() then
             if zone == "Level 70 +" and not IsUnderground then
                 Sf:GoUnderground()
@@ -1332,13 +1446,15 @@ function StartAutoFarm()
                 Sf:Teleport(data.Pos, true, WalkSpeedSlider.Value)
             end
             task.wait(0.5)
+            
             if not Sf:HasAnyBait() then continue end
             EnsureRodEquipped()
+
             RootPart.Anchored = true
             task.wait(0.2)
             EquipBaitOnRod()
             task.wait(0.3)
-            
+
             local castPos
             if zone == "Level 70 +" then
                 castPos = Zones["Level 70 +"].CastPos
@@ -1349,7 +1465,7 @@ function StartAutoFarm()
             
             RootPart.CFrame = CFrame.lookAt(RootPart.Position, castPos)
             task.wait(0.2)
-            
+
             local hasRod, rodName = Sf:HasAnyRod()
             local rodTool = nil
             if hasRod and rodName then
@@ -1358,47 +1474,46 @@ function StartAutoFarm()
             
             if rodTool then
                 print("🎣 [MainLoop] جاري رمي السنارة...")
-                pcall(function() v_u_1.get("throw_rod", rodTool, castPos) end)
+                pcall(function() Net_upvr.get("throw_rod", rodTool, castPos) end)
             else
                 print("🖱️ [MainLoop] جاري الضغط على الشاشة للرمي...")
                 ClickScreen()
             end
             
-            UpdateActivity()
-            
+            UpdateActivity() -- تحديث النشاط بعد الرمي
+
             local timeout = tick() + 25
             local progressBarVisible = false
             
             while IsFarmingActive and tick() < timeout do
                 if isProtectionTriggered then
-                    if rodTool then pcall(function() v_u_1.send("reel_ended", rodTool, false) end) end
+                    if rodTool then pcall(function() Net_upvr.send("reel_ended", rodTool, false) end) end
                     break
                 end
                 task.wait(0.1)
                 if isSliderOpen() then
                     progressBarVisible = true
                     print("🎯 تم اكتشاف السلايدر!")
-                    UpdateActivity()
+                    UpdateActivity() -- تحديث النشاط عند اكتشاف السلايدر
                     break
                 end
             end
-            
+
             if isProtectionTriggered then continue end
-            
+
             if progressBarVisible then
                 task.wait(0.3)
                 QuickWin()
                 if rodTool then
-                    pcall(function() v_u_1.send("reel_ended", rodTool, true) end)
+                    pcall(function() Net_upvr.send("reel_ended", rodTool, true) end)
                 end
-                UpdateActivity()
+                UpdateActivity() -- تحديث النشاط بعد الصيد الناجح
             else
                 if rodTool then
-                    pcall(function() v_u_1.send("reel_ended", rodTool, false) end)
+                    pcall(function() Net_upvr.send("reel_ended", rodTool, false) end)
                 end
             end
         end
-        
         task.wait(1)
     end
     
@@ -1407,6 +1522,5 @@ function StartAutoFarm()
 end
 
 print("✅ تم تحميل القائمة بنجاح!")
-print("📱 تم تفعيل دعم الجوال + نظام فك الحماية + Net Hook")
 print("⚡ تم تحسين سرعة شراء المعدات والطعم بشكل هائل!")
 print("🛡️ تم تفعيل نظام الحماية من الخمول والتعليق (10 دقائق) مع إعادة الإحياء التلقائي!")

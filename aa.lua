@@ -1,5 +1,5 @@
 -- ============================================================
--- 0. تنظيف أولي + حماية + Hooks (كودك المدمج)
+-- 0. تنظيف أولي + حماية + Hooks
 -- ============================================================
 for _, obj in pairs(workspace:GetDescendants()) do
     if obj:IsA("Model") and obj.Name == "DoorSystem" then
@@ -17,45 +17,30 @@ end
 
 local RS = game:GetService("ReplicatedStorage")
 
--- Hook TransitionUI
 pcall(function()
     local TransitionModule = require(RS.Modules.Game.UI.TransitionUI)
-    local old_transition = TransitionModule.transition
     TransitionModule.transition = function(p_in, p_wait, p_out, noLogo)
-        -- تخطي الانتقال بالكامل
         return
     end
 end)
 
--- Hook CharacterCreator
 pcall(function()
     local CharCreator = require(RS.Modules.Game.CharacterCreator.CharacterCreator)
-
     if CharCreator.start then
-        local old_start = CharCreator.start
         CharCreator.start = function(...)
-            while true do
-                task.wait(1)
-            end
+            while true do task.wait(1) end
         end
     end
-
     if CharCreator.load_page then
         local old_load = CharCreator.load_page
-        CharCreator.load_page = function(...)
-            return old_load(...)
-        end
+        CharCreator.load_page = function(...) return old_load(...) end
     end
-
     if CharCreator.initiate then
         local old_initiate = CharCreator.initiate
-        CharCreator.initiate = function(...)
-            return old_initiate(...)
-        end
+        CharCreator.initiate = function(...) return old_initiate(...) end
     end
 end)
 
--- حماية مقاعد السيارات فقط
 local VehiclesFolder = workspace:WaitForChild("Vehicles", 10)
 local protectedVehicles = {}
 
@@ -65,13 +50,10 @@ local function updateVehicleList()
     for _, model in ipairs(VehiclesFolder:GetDescendants()) do
         if model:IsA("VehicleSeat") and model.Name == "DriverSeat" then
             local vehicle = model:FindFirstAncestorOfClass("Model")
-            if vehicle then
-                protectedVehicles[vehicle] = true
-            end
+            if vehicle then protectedVehicles[vehicle] = true end
         end
     end
 end
-
 updateVehicleList()
 
 local function isProtectedSeat(seat)
@@ -108,10 +90,7 @@ workspace.DescendantAdded:Connect(function(obj)
     end
 end)
 
--- إخفاء identifyexecutor
-if getgenv then
-    getgenv().identifyexecutor = nil
-end
+if getgenv then getgenv().identifyexecutor = nil end
 if getfenv then
     local env = getfenv()
     env.identifyexecutor = nil
@@ -150,7 +129,7 @@ local LastServerSwitchTime = tick()
 
 local LastActivityTime = tick()
 local LastCheckedPosition = Vector3.new(0, 0, 0)
-local IdleThreshold = 600 -- 10 دقائق
+local IdleThreshold = 600
 
 local function UpdateActivity()
     LastActivityTime = tick()
@@ -248,9 +227,6 @@ FishTab:AddToggle("RespawnToggle", {
     end
 })
 
--- ============================================================
--- 2.1 زر تفعيل مانع الطرد
--- ============================================================
 AntiKickTab:AddSection("مانع الطرد")
 AntiKickTab:AddToggle("AntiKickToggle", {
     Title = "تفعيل مانع الطرد",
@@ -267,9 +243,6 @@ AntiKickTab:AddToggle("AntiKickToggle", {
     end
 })
 
--- ============================================================
--- 2.2 إعدادات تغيير السيرفر
--- ============================================================
 ServerTab:AddSection("تغيير السيرفر التلقائي")
 ServerTab:AddToggle("ServerSwitchToggle", {
     Title = "تفعيل تغيير السيرفر التلقائي",
@@ -313,29 +286,18 @@ ServerTab:AddButton({
     end
 })
 
--- ============================================================
--- 2.3 حفظ وحذف Config
--- ============================================================
 ServerTab:AddSection("💾 إدارة الإعدادات")
 ServerTab:AddButton({
     Title = "💾 حفظ الإعدادات",
-    Callback = function()
-        SaveConfig()
-    end
+    Callback = function() SaveConfig() end
 })
-
 ServerTab:AddButton({
     Title = "📂 تحميل الإعدادات",
-    Callback = function()
-        LoadConfig()
-    end
+    Callback = function() LoadConfig() end
 })
-
 ServerTab:AddButton({
     Title = "🗑️ حذف الإعدادات",
-    Callback = function()
-        DeleteConfig()
-    end
+    Callback = function() DeleteConfig() end
 })
 
 DevTab:AddButton({
@@ -346,7 +308,7 @@ DevTab:AddButton({
 })
 
 -- ============================================================
--- 3. حلقة مانع الطرد (كل 15 دقيقة)
+-- 3. حلقة مانع الطرد
 -- ============================================================
 local function AntiKickLoop()
     while AntiKickEnabled do
@@ -373,7 +335,7 @@ local function AntiKickLoop()
 end
 
 -- ============================================================
--- 4. الخدمات والموديولات الرسمية
+-- 4. الخدمات والموديولات
 -- ============================================================
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -399,7 +361,6 @@ Client.CharacterAdded:Connect(function(c)
     print("🔄 تم اكتشاف إعادة ظهور الشخصية (Respawn)!")
 end)
 
--- تحميل الموديولات
 local Net_upvr = require(RS.Modules.Core.Net)
 local Data_upvr = require(RS.Modules.Core.Data)
 local Util_upvr = require(RS.Modules.Core.Util)
@@ -455,11 +416,9 @@ function SaveConfig()
         ServerSwitchInterval = ServerSwitchInterval,
         AutoFarmActive = IsFarmingActive
     }
-    
     local success, err = pcall(function()
         writefile(ConfigPath, HttpService:JSONEncode(configData))
     end)
-    
     if success then
         print("💾 تم حفظ الإعدادات بنجاح!")
     else
@@ -473,9 +432,7 @@ function LoadConfig()
             warn("⚠️ لا يوجد ملف إعدادات محفوظ!")
             return false
         end
-        
         local data = HttpService:JSONDecode(readfile(ConfigPath))
-        
         if data.AutoBuyEnabled ~= nil then AutoBuyToggle:Set(data.AutoBuyEnabled) end
         if data.RodSelect then RodDropdown:Set(data.RodSelect) end
         if data.BaitSelect then BaitDropdown:Set(data.BaitSelect) end
@@ -486,23 +443,18 @@ function LoadConfig()
         if data.AntiKick ~= nil then AntiKickEnabled = data.AntiKick end
         if data.ServerSwitch ~= nil then ServerSwitchEnabled = data.ServerSwitch end
         if data.ServerSwitchInterval then ServerSwitchInterval = data.ServerSwitchInterval end
-        
         print("📂 تم تحميل الإعدادات بنجاح!")
-        
         if data.AutoFarmActive then
             IsFarmingActive = true
             UpdateActivity()
             task.spawn(StartAutoFarm)
             print("🚀 تم تشغيل Auto Farm تلقائياً!")
         end
-        
         if AntiKickEnabled then
             task.spawn(AntiKickLoop)
         end
-        
         return true
     end)
-    
     if not success then
         warn("❌ فشل تحميل الإعدادات: " .. tostring(err))
     end
@@ -518,7 +470,6 @@ function DeleteConfig()
             warn("⚠️ لا يوجد ملف إعدادات لحذفه!")
         end
     end)
-    
     if not success then
         warn("❌ فشل حذف الإعدادات: " .. tostring(err))
     end
@@ -529,19 +480,9 @@ end
 -- ============================================================
 function SwitchToSmallestServer()
     print("🔄 جاري البحث عن سيرفر بأقل عدد لاعبين...")
-    
     local servers = {}
-    local req = game:HttpGet(
-        string.format(
-            "https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100",
-            game.PlaceId
-        )
-    )
-    
-    local success, data = pcall(function()
-        return HttpService:JSONDecode(req)
-    end)
-    
+    local req = game:HttpGet(string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100", game.PlaceId))
+    local success, data = pcall(function() return HttpService:JSONDecode(req) end)
     if success and data and data.data then
         local currentJobId = game.JobId
         for _, v in pairs(data.data) do
@@ -550,7 +491,6 @@ function SwitchToSmallestServer()
             end
         end
     end
-    
     if #servers > 0 then
         local targetJobId = servers[math.random(1, #servers)]
         print("🎯 تم اختيار سيرفر جديد! جاري الانتقال...")
@@ -577,7 +517,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 7. نظام الانتظار للواجهة البدائية وبدء الفارم
+-- 7. نظام الانتظار للواجهة البدائية
 -- ============================================================
 function WaitForLoadingScreenAndStart()
     print("⏳ انتظار الواجهة البدائية...")
@@ -589,12 +529,10 @@ function WaitForLoadingScreenAndStart()
         task.wait(1)
         pcall(function() Net_upvr.send("leave_character_creator") end)
         task.wait(2)
-        
         Character = Client.Character or Client.CharacterAdded:Wait()
         Humanoid = Character:WaitForChild("Humanoid")
         RootPart = Character:WaitForChild("HumanoidRootPart")
         task.wait(2)
-        
         local loaded = LoadConfig()
         if loaded and IsFarmingActive then
             UpdateActivity()
@@ -658,7 +596,6 @@ local function GetFishNamesFromInventory()
     local Items = PlayerGui:FindFirstChild("Items")
     local Holding = Items and Items:FindFirstChild("ItemsHolder") and Items.ItemsHolder:FindFirstChild("ItemsScrollingFrame")
     if not Holding then return fishList end
-    
     for _, v in pairs(Holding:GetChildren()) do
         if v.Name ~= 'Folder' and v.Name ~= 'UIGridLayout' and v.Name ~= "ItemTemplate" then
             local itemType = v:GetAttribute("ItemType")
@@ -707,7 +644,7 @@ end
 MonitorInventoryForFish()
 
 -- ============================================================
--- 10. نظام مراقبة الرسائل المتطور (الحماية الذكية)
+-- 10. نظام مراقبة الرسائل + الحماية الذكية (محسّن)
 -- ============================================================
 local isProtectionTriggered = false
 local lastKnownPosition = nil
@@ -731,24 +668,85 @@ local function RestorePlayerPosition()
     return false
 end
 
+-- دالة تتأكد إنك وصلت منطقة الصيد بعد الحماية
+local function EnsureReachedFishingZone()
+    if not IsFarmingActive then return end
+    
+    local zone = ZoneDropdown.Value
+    local data = Zones[zone]
+    if not data then return end
+    
+    print("🔄 [الحماية] جاري التأكد من الوصول لمنطقة الصيد...")
+    
+    IsUnderground = false
+    Config.StopWalking = false
+    
+    if zone == "Level 70 +" then
+        -- نروح السطح أولاً ثم تحت
+        Sf:Teleport(data.SurfacePos, true, WalkSpeedSlider.Value)
+        task.wait(0.4)
+        if not IsFarmingActive then return end
+        
+        Sf:MoveSmoothly(RootPart.Position, data.UndergroundPos, WalkSpeedSlider.Value)
+        task.wait(0.4)
+        
+        -- نتأكد إننا وصلنا فعلاً
+        local dist = (RootPart.Position - data.UndergroundPos).Magnitude
+        if dist > 8 then
+            print("⚠️ [الحماية] ما وصلنا كويس، نعيد المحاولة...")
+            Sf:Teleport(data.UndergroundPos, true, WalkSpeedSlider.Value)
+            task.wait(0.5)
+        end
+        
+        IsUnderground = true
+        print("✅ [الحماية] تم التأكد من الوصول لمنطقة Level 70 تحت الأرض")
+        
+    elseif zone == "Level 40 +" then
+        Sf:Teleport(data.Pos, true, WalkSpeedSlider.Value)
+        task.wait(0.5)
+        
+        local dist = (RootPart.Position - data.Pos).Magnitude
+        if dist > 10 then
+            print("⚠️ [الحماية] ما وصلنا كويس، نعيد المحاولة...")
+            Sf:Teleport(data.Pos, true, WalkSpeedSlider.Value)
+            task.wait(0.5)
+        end
+        print("✅ [الحماية] تم التأكد من الوصول لمنطقة Level 40")
+    end
+    
+    UpdateActivity()
+end
+
 local function PauseFarmingTemporarily()
     if isProtectionTriggered then return end
     isProtectionTriggered = true
+    
     SavePlayerPosition()
     Config.StopWalking = true
     Config.Running = false
+    
     if RootPart then
         RootPart.Anchored = false
         RootPart.AssemblyLinearVelocity = Vector3.zero
         RootPart.AssemblyAngularVelocity = Vector3.zero
     end
+    
+    IsUnderground = false
+    
     print("⚠️ [الحماية] تم اكتشاف رسالة تحذيرية - إيقاف مؤقت!")
-    task.wait(3)
+    
+    task.wait(3.5)
+    
     if IsFarmingActive then
         RestorePlayerPosition()
         Config.StopWalking = false
-        print("✅ [الحماية] استئناف العمل من نفس النقطة!")
+        
+        -- هنا المهم: نتأكد إننا وصلنا منطقة الصيد قبل ما نكمل
+        EnsureReachedFishingZone()
+        
+        print("✅ [الحماية] استئناف العمل من منطقة الصيد الصحيحة!")
     end
+    
     isProtectionTriggered = false
 end
 
@@ -1208,7 +1206,7 @@ local function QuickWin()
 end
 
 -- ============================================================
--- 14. نظام إعادة الإحياء التلقائي (عند الموت فقط)
+-- 14. نظام إعادة الإحياء التلقائي
 -- ============================================================
 task.spawn(function()
     while task.wait(0.5) do
@@ -1228,32 +1226,26 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 15. نظام الحماية من الخمول والتعليق (Anti-Stuck)
+-- 15. نظام الحماية من الخمول
 -- ============================================================
 task.spawn(function()
     while true do
         task.wait(5)
-        
         if not IsFarmingActive then
             UpdateActivity()
             continue
         end
-
         local currentTime = tick()
         local timeSinceActivity = currentTime - LastActivityTime
-        
         local char = game.Players.LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             local currentPos = char.HumanoidRootPart.Position
             local distanceMoved = (currentPos - LastCheckedPosition).Magnitude
-            
             if distanceMoved > 3 then
                 UpdateActivity()
             elseif timeSinceActivity >= IdleThreshold then
-                print("⚠️ [Anti-Stuck] تم اكتشاف خمول/تعليق لمدة 10 دقائق! جاري إعادة الإحياء لكسر التعليق...")
-                pcall(function()
-                    Net_upvr.send("request_respawn")
-                end)
+                print("⚠️ [Anti-Stuck] تم اكتشاف خمول/تعليق لمدة 10 دقائق! جاري إعادة الإحياء...")
+                pcall(function() Net_upvr.send("request_respawn") end)
                 task.wait(2)
                 UpdateActivity()
                 print("✅ [Anti-Stuck] تم إرسال أمر إعادة الإحياء بنجاح!")
@@ -1312,6 +1304,7 @@ function StartAutoFarm()
         if isProtectionTriggered then
             while isProtectionTriggered and IsFarmingActive do task.wait(0.5) end
             if not IsFarmingActive then break end
+            -- بعد الحماية الدالة EnsureReachedFishingZone تكون اشتغلت خلاص
             continue
         end
 
@@ -1434,4 +1427,4 @@ end
 print("✅ تم تحميل القائمة بنجاح!")
 print("⚡ تم تحسين سرعة شراء المعدات والطعم بشكل هائل!")
 print("🛡️ تم تفعيل نظام الحماية من الخمول والتعليق (10 دقائق) مع إعادة الإحياء التلقائي!")
-print("🔒 تم دمج حماية الأبواب + المقاعد + Hooks بنجاح!")
+print("🔒 بعد الحماية يتأكد إنك وصلت منطقة الصيد فعلياً قبل ما يكمل!")
